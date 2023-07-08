@@ -2,6 +2,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
 import serve from 'rollup-plugin-serve';
+import livereload from 'rollup-plugin-livereload';
 import typescript from '@rollup/plugin-typescript';
 
 export default {
@@ -67,7 +68,9 @@ export default {
             headers: {
                 'Access-Control-Allow-Origin': '*'
             }
-        })
+        }),
+
+        livereload(),
 
     ]
 };
