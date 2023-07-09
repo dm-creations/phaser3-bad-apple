@@ -1,9 +1,15 @@
 import * as Phaser from 'phaser';
 import Snake from './Snake';
+import Aplee from './Aplee';
+import Overlay from './overlay/Overlay'
+import { canvasContainer, gameWidth, gameHeight, pauseBtn, restartBtn, debugGrid, debugBtn, gameContainer, overlay } from './config'
 
 export default class Demo extends Phaser.Scene
 {
-    private snake!: Snake;
+    public snake!: Snake
+    public aplee!: Aplee
+    public inControl: 'snake' | 'aplee' 
+    public overlay!: Overlay
     private worldIterations = 0
     private bonusesPositions: any[] = []
     private penaltyPositions: any[] = []
@@ -15,6 +21,7 @@ export default class Demo extends Phaser.Scene
     constructor ()
     {
         super('demo');
+        this.inControl = 'snake'
     }
 
     preload ()
@@ -24,17 +31,21 @@ export default class Demo extends Phaser.Scene
         this.load.glsl('stars', 'assets/starfields.glsl.js');
 
         this.load.image('snake-body-1bit', 'assets/snake-body-1bit.png');
+        this.load.spritesheet("snake-normal", "assets/snake-normal.png", {
+            frameWidth: 64
+        });
     }
 
     create ()
     {
-        this.cameras.main.centerOn(0, 0);
+        this.overlay = new Overlay(this)
+        // this.cameras.main.centerOn(0, 0);
         // this.add.shader('RGB Shift Field', -400, -300, 800, 600).setOrigin(0);
 
         const applee = this.physics.add.sprite(0, 0, 'applee')
             .setCircle(8).setScale(4);
 
-        this.snake = new Snake(this, -1, 0);
+        this.snake = new Snake(this, -300, 0);
 
         // input
         this.cursors = this.input.keyboard.createCursorKeys()
@@ -49,10 +60,14 @@ export default class Demo extends Phaser.Scene
         this.worldIterations += 1
     
         if (this.worldIterations % snakeMoveIterationsRange === 0) {
-            this.handleInput()
-            this.snake.move()
+            if (this.inControl === 'snake') {
+                this.handleInput()
+                this.snake.move()
+            } else {
+                this.snake.autoMove();
+            }
     
-            this.checkCollision()
+            // this.checkCollision()
         }
     
         // this.fpsText.setText(this.getFPS())
@@ -60,11 +75,16 @@ export default class Demo extends Phaser.Scene
         if (!this.snake.isAlive()) {
             this.onDead()
             // pause game
-            // this.scene.pause();
+            this.scene.pause();
         }
     }
     public handleInput (): void {
         const wantMoveDir = this.getDirByInput()
+
+        // if snake-mounted is true, play apple-slap animation
+        // if (this.snake.isMounted()) {
+        //     this.snake.playAppleSlapAnimation(wantMoveDir)
+        // }
     
         this.snake.setDir(wantMoveDir)
     }
@@ -169,8 +189,9 @@ export default class Demo extends Phaser.Scene
 const config = {
     type: Phaser.AUTO,
     backgroundColor: '#FFFFFF',
-    width: 800,
-    height: 600,
+    width: gameWidth,
+    height: gameHeight,
+    parent: canvasContainer || undefined,
     physics: {
         default: 'arcade',
         arcade: { debug: true }
@@ -179,3 +200,38 @@ const config = {
 };
 
 const game = new Phaser.Game(config);
+
+if (pauseBtn) {
+    pauseBtn.addEventListener('click', () => {
+        const scene = game.scene.getScene('demo')
+        const method = scene.sys.isPaused() ? 'resume' : 'pause'
+        const datasetKey = scene.sys.isPaused() ? 'pause' : 'resume'
+  
+        if (pauseBtn) {
+                pauseBtn.textContent = pauseBtn.dataset[datasetKey] || null
+        }
+  
+        scene.sys[method]()
+    })
+  }
+    if (restartBtn) {
+        restartBtn.addEventListener('click', () => {
+        game.scene.start('demo')
+    })
+  }
+  if (debugBtn) {
+    debugBtn.addEventListener('click', () => {
+      if (debugGrid) {
+        const isDebug = [undefined, '0'].includes(debugGrid.dataset.hide)
+  
+        // '0' or '1'
+        debugGrid.dataset.hide = (+isDebug).toString()
+        debugGrid.classList.toggle('game__grid--hidden', !isDebug)
+  
+        game.events.emit('app_toggle_debug', isDebug)
+      }
+        if (debugBtn) {
+            debugBtn.textContent = debugBtn.textContent === 'Debug' ? 'Debugging' : 'Debug'
+        }
+    })
+  }

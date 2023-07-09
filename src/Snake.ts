@@ -1,15 +1,13 @@
 import * as Phaser from 'phaser';
+import { snakeSize, ceilsXCount, ceilsYCount } from './config'
 // import Demo from './game';
 export default class Snake {
 
     // this might need exporting
-    private gameContainer: HTMLElement = document.querySelector('#game') || document.body
-    private gameContainerBCR = this.gameContainer.getBoundingClientRect()
-    private  gameContainerW = this.gameContainerBCR.width // window.innerWidth
-    private  gameContainerH = this.gameContainerBCR.height
-    private ceilsXCount = this.getCeilsCountByPixelsCount(this.gameContainerW) // - 1 (if scroll)
-    private ceilsYCount = this.getCeilsCountByPixelsCount(this.gameContainerH)
-    private headPosition: Phaser.Geom.Point
+    public gameContainer: HTMLElement = document.querySelector('#game') || document.body
+    public gameContainerBCR = this.gameContainer.getBoundingClientRect()
+    public gameContainerW = this.gameContainerBCR.width // window.innerWidth
+    public gameContainerH = this.gameContainerBCR.height
     public snakeHeadX: number
     public snakeHeadY: number
     public bodyPartsSprites: Phaser.GameObjects.Sprite[] = []
@@ -25,7 +23,7 @@ export default class Snake {
     public lives: number
     private initialLength: number = 20
     public alive: boolean = true
-    private currentDir: string = this.DIRECTIONS.UP
+    private currentDir: string = this.DIRECTIONS.RIGHT
     private lastMoveDir: string = this.currentDir
     private scene: Phaser.Scene
     private ceil: number
@@ -78,8 +76,8 @@ export default class Snake {
     }
     public move (): void {
         const pos = {
-          x: this.snakeHeadX,
-          y: this.snakeHeadY
+            x: this.snakeHeadX,
+            y: this.snakeHeadY
         }
         const dir = this.currentDir
     
@@ -90,8 +88,8 @@ export default class Snake {
     
         this.bodyPartsPositions.shift()
         this.bodyPartsPositions.push({
-          ...pos,
-          dir
+            ...pos,
+            dir
         })
     
         // Border Movement
@@ -103,12 +101,22 @@ export default class Snake {
     
         this.lastMoveDir = this.currentDir
     }
+    public autoMove (): void {
+        const pos = {
+            x: this.snakeHeadX,
+            y: this.snakeHeadY
+        }
+        const dir = this.currentDir
+
+        // TODO pathfind to good apple or player whichever is closer
+
+    }
     public moveRegardingWorldBoundaries () {
         const head = this.getHead()
         const xStartPos = this.getCeilXPos(1)
         const yStartPos = this.getCeilYPos(1)
-        const xEndPos = this.getCeilXPos(this.ceilsXCount)
-        const yEndPos = this.getCeilYPos(this.ceilsYCount)
+        const xEndPos = this.getCeilXPos(ceilsXCount)
+        const yEndPos = this.getCeilYPos(ceilsYCount)
     
         let x
         let y
@@ -233,7 +241,7 @@ export default class Snake {
         this.updateBodyPartsSpritesFrames()
     }
     private addSprite (x, y) {
-        const sprite = this.scene.add.sprite(x, y, 'snake', 4)
+        const sprite = this.scene.add.sprite(x, y, 'snake-normal', 4)
     
         sprite.setDisplaySize(this.snakeLength, this.snakeLength)
     
@@ -263,7 +271,7 @@ export default class Snake {
           const next = this.bodyPartsPositions[i + 1]
     
           const setTex = (frame) => {
-            sprite.setTexture('snake', frame)
+            sprite.setTexture('snake-normal', frame)
           }
     
           // head
@@ -273,7 +281,7 @@ export default class Snake {
             // tail not turning
             if (dir === next.dir) {
               setTex(TAIL[dir])
-            } else { // Tail in the process of turning
+            } else { // Tail 
               setTex(TAIL[next.dir])
             }
           } else if (dir !== next.dir) { // corners
@@ -326,7 +334,7 @@ export default class Snake {
         }
     }
     private addBodyBonusSprite (x, y) {
-        const sprite = this.scene.add.sprite(x, y, 'snake', 16) // 15
+        const sprite = this.scene.add.sprite(x, y, 'snake-normal', 16) // 15
     
         sprite.setDepth(3)
         sprite.setDisplaySize(this.snakeLength / 2, this.snakeLength / 2)

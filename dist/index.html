@@ -2,8 +2,120 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <script src="game.js"></script>
+    <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel="icon" href="assets/icon/favicon.ico" />
+    <style>
+      body {
+        font-size: 10px;
+        color: black;
+        background-color: grey; /* #FFFFFF */
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --grid-size: 32px;
+        --grid-color: #FF0000;
+        --grid-opacity: 0.5;
+        --grid-size-minus: calc(var(--grid-size) - 1px);
+      }
+
+      #game-wrap {
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #game-wrap {
+        /* height: 100vh; */
+        /* display: flex; */
+        align-items: center;
+        justify-content: center;
+      }
+
+      #game {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border-radius: 3px;
+        border: 2px solid black;
+      }
+
+      #game__canvas-wrap {
+        width: 100%;
+        height: 100%;
+      }
+
+      #game__canvas-wrap canvas {
+          /* removes space in bottom */
+          display: block;
+      }
+
+      #game__grid {
+        height: 100%;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        background-image: repeating-linear-gradient(0deg, transparent, transparent 31px, #FF0000 31px, #FF0000 32px),
+                          repeating-linear-gradient(-90deg, transparent, transparent 31px, #FF0000 31px, #FF0000 32px);
+        /* background-image: repeating-linear-gradient(0deg, transparent, transparent var(--gridSizeMinus), var(--gridColor) var(--gridSizeMinus), var(--gridColor) var(--gridSize)),
+                          repeating-linear-gradient(-90deg, transparent, transparent var(--gridSizeMinus), var(--gridColor) var(--gridSizeMinus), var(--gridColor) var(--gridSize)); */
+        background-size: var(--gridSize) var(--gridSize);
+        opacity: var(--gridOpacity);
+        content: " ";
+      }
+
+      #game__grid.game__grid--hidden {
+        display: none;
+      }
+
+      #game__overlay {
+        position: absolute;
+        top: 0;
+        padding: 12px;
+      }
+
+      #game__overlay.game__overlay--hidden {
+        display: none;
+      }
+    </style>
   </head>
   <body>
+    <div id="game-wrap">
+      <div id="game">
+        <!--canvas will be inside-->
+        <div id="game__canvas-wrap"></div>
+        <div id="game__grid" class="game__grid--hidden"></div>
+        <!--overlay with buttons-->
+        <div id="game__overlay">
+          <button
+            id="pause-btn"
+            class="btn btn--primary"
+            data-pause="Pause"
+            data-resume="Resume"
+          >
+            Pause
+          </button>
+          <button
+            id="restart-btn"
+            class="btn btn--success"
+          >
+            Restart
+          </button>
+          <button
+            id="debug-btn"
+            class="btn btn--danger"
+          >
+            Debug
+          </button>
+          <button
+            id="reverse-btn">
+            Role Reverse!
+          </button>
+        </div>
+      </div>
+    </div>
   </body>
+  <script src="game.js"></script>
 </html>
