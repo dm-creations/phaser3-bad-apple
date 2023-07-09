@@ -2,7 +2,7 @@ import * as Phaser from 'phaser';
 import Snake from './Snake';
 import Aplee from './Aplee';
 import Overlay from './overlay/Overlay'
-import { canvasContainer, gameWidth, gameHeight, pauseBtn, restartBtn, debugGrid, debugBtn, gameContainer, overlay } from './config'
+import { canvasContainer, gameWidth, gameHeight, pauseBtn, restartBtn, debugGrid, debugBtn, reverseBtn, gameContainer, overlay } from './config'
 
 export default class Demo extends Phaser.Scene
 {
@@ -21,16 +21,20 @@ export default class Demo extends Phaser.Scene
     constructor ()
     {
         super('demo');
-        this.inControl = 'snake'
+        this.inControl = 'aplee'
     }
 
     preload ()
     {
+        // create a function that preloads all the assets inside assets/character
+        // this.load.setPath('assets/character');
+        // this.load.image('down', 'assets/character/Character_Down.png');
+        Aplee.loadSpriteSheets(this)
+
         this.load.spritesheet('applee', 'assets/character/Character_Down.png', { frameWidth: 16, frameHeight: 19, margin: 8 });
 
         this.load.glsl('stars', 'assets/starfields.glsl.js');
 
-        this.load.image('snake-body-1bit', 'assets/snake-body-1bit.png');
         this.load.spritesheet("snake-normal", "assets/snake-normal.png", {
             frameWidth: 64
         });
@@ -42,14 +46,14 @@ export default class Demo extends Phaser.Scene
         // this.cameras.main.centerOn(0, 0);
         // this.add.shader('RGB Shift Field', -400, -300, 800, 600).setOrigin(0);
 
-        const applee = this.physics.add.sprite(0, 0, 'applee')
-            .setCircle(8).setScale(4);
-
-        this.snake = new Snake(this, -300, 0);
-
         // input
         this.cursors = this.input.keyboard.createCursorKeys()
         this.addEventListeners()
+
+        this.snake = new Snake(this, -gameWidth, 300);
+        this.aplee = new Aplee(this, 300, 0);
+        // play the Aplee animation
+        // this.aplee.anims.play('up');
         
     }
     update (time, delta)
@@ -68,6 +72,9 @@ export default class Demo extends Phaser.Scene
             }
     
             // this.checkCollision()
+        }
+        if (this.inControl === 'aplee') { // not affected by world iterations
+            this.aplee.handleInput(delta)
         }
     
         // this.fpsText.setText(this.getFPS())
@@ -208,7 +215,7 @@ if (pauseBtn) {
         const datasetKey = scene.sys.isPaused() ? 'pause' : 'resume'
   
         if (pauseBtn) {
-                pauseBtn.textContent = pauseBtn.dataset[datasetKey] || null
+            pauseBtn.textContent = pauseBtn.dataset[datasetKey] || null
         }
   
         scene.sys[method]()
@@ -233,5 +240,13 @@ if (pauseBtn) {
         if (debugBtn) {
             debugBtn.textContent = debugBtn.textContent === 'Debug' ? 'Debugging' : 'Debug'
         }
+    })
+  }
+  if (reverseBtn) {
+    reverseBtn.addEventListener('click', () => {
+        const scene = game.scene.getScene('demo')
+        const inControl = scene.inControl
+    
+        scene.inControl = inControl === 'snake' ? 'aplee' : 'snake'
     })
   }

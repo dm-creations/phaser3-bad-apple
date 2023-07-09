@@ -29,6 +29,7 @@ export const pauseBtn: HTMLElement | null = document.querySelector('#pause-btn')
 export const restartBtn: HTMLElement | null = document.querySelector('#restart-btn')
 export const debugBtn: HTMLElement | null = document.querySelector('#debug-btn')
 export const debugGrid: HTMLElement | null = document.querySelector('#game__grid')
+export const reverseBtn: HTMLElement | null = document.querySelector('#reverse-btn')
 
 // const gameConfig: GameConfig = {
 //   width: gameWidth,
