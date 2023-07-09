@@ -2,10 +2,10 @@ import * as Phaser from 'phaser';
 
 export default class Aplee {
     private scene: Phaser.Scene
-    private aplee!: Phaser.Physics.Arcade.Sprite
+    public apleeSprite!: Phaser.Physics.Arcade.Sprite
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys
     private boostCooldown: number
-    private isBoosting: boolean
+    public isBoosting: boolean
 
     constructor(scene: Phaser.Scene, x: number, y: number) {
         this.scene = scene
@@ -20,9 +20,11 @@ export default class Aplee {
     
         // Play the initial animation
         // this.scene.anims.play('move_up');
-        this.aplee = this.scene.physics.add.sprite(300, 300, 'aplee')
+        this.apleeSprite = this.scene.physics.add.sprite(300, 300, 'aplee')
             .setCircle(8, 8, 10)
             .setScale(4);
+
+        // this.aplee.body.onOverlap = true;
 
     }
     public handleInput (delta: number) {
@@ -77,20 +79,36 @@ export default class Aplee {
             }
         }
         if (this.isBoosting) {
-            this.aplee.setVelocity(velocityX*2, velocityY*2);
+            this.apleeSprite.setVelocity(velocityX*2, velocityY*2).setCircle(16, 0, 3);
         } else {
-            this.aplee.setVelocity(velocityX, velocityY); // Normal velocity
+            this.apleeSprite.setVelocity(velocityX, velocityY).setCircle(8, 8, 10); // Normal velocity
+        }
+        this.updatePosition();
+    }
+    public updatePosition() {
+        // if passed the left or right edge of the screen, wrap around
+        if (this.apleeSprite.x < 0) {
+            this.apleeSprite.x = this.scene.game.canvas.width;
+        } else if (this.apleeSprite.x > this.scene.game.canvas.width) {
+            this.apleeSprite.x = 0;
+        }
+        // if passed the top or bottom edge of the screen, wrap around
+        if (this.apleeSprite.y < 0) {
+            this.apleeSprite.y = this.scene.game.canvas.height;
+        } else if (this.apleeSprite.y > this.scene.game.canvas.height) {
+            this.apleeSprite.y = 0;
         }
     }
     public animateDirection() {
         // animate the aplee based on the 8 directions that the velocity is currently moving
-        let direction = this.getDirection(this.aplee.body.velocity.x, this.aplee.body.velocity.y);
+        let direction = this.getDirection(this.apleeSprite.body.velocity.x, this.apleeSprite.body.velocity.y);
         // if boost is active, prepend 'slash' to the direction
         if (this.isBoosting) {
             direction = 'slash' + direction;
+        } else {
+
         }
-        console.log(direction);
-        this.aplee.anims.play(direction, true);
+        this.apleeSprite.anims.play(direction, true);
     }
     private getDirection(xVelocity: number, yVelocity: number): string {
         if (xVelocity > 0 && yVelocity > 0) {
@@ -117,6 +135,10 @@ export default class Aplee {
         const frameWidth = 32;
         const frameHeight = 31;
         const margin = 0;
+        const slashFrameWidth = 32;
+        const slashFrameHeight = 28;
+        const slashMargin = 0;
+
         scene.load.spritesheet('up', 'assets/character/Character_Up.png', { frameWidth: frameWidth, frameHeight: frameHeight, margin: margin });
         scene.load.spritesheet('upleft', 'assets/character/Character_UpLeft.png', { frameWidth: frameWidth, frameHeight: frameHeight, margin: margin });
         scene.load.spritesheet('upright', 'assets/character/Character_UpRight.png', { frameWidth: frameWidth, frameHeight: frameHeight, margin: margin });
@@ -125,14 +147,14 @@ export default class Aplee {
         scene.load.spritesheet('downright', 'assets/character/Character_DownRight.png', { frameWidth: frameWidth, frameHeight: frameHeight, margin: margin });
         scene.load.spritesheet('left', 'assets/character/Character_Left.png', { frameWidth: frameWidth, frameHeight: frameHeight, margin: margin });
         scene.load.spritesheet('right', 'assets/character/Character_Right.png', { frameWidth: frameWidth, frameHeight: frameHeight, margin: margin });
-        scene.load.spritesheet('slashup', 'assets/character/Character_SlashUpRight', { frameWidth: frameWidth, frameHeight: frameHeight, margin: margin })
-        scene.load.spritesheet('slashupleft', 'assets/character/Character_SlashUpLeft.png', { frameWidth: frameWidth, frameHeight: frameHeight, margin: margin });
-        scene.load.spritesheet('slashupright', 'assets/character/Character_SlashUpRight.png', { frameWidth: frameWidth, frameHeight: frameHeight, margin: margin });
-        scene.load.spritesheet('slashdown', 'assets/character/Character_SlashDownLeft.png', { frameWidth: frameWidth, frameHeight: frameHeight, margin: margin })
-        scene.load.spritesheet('slashdownleft', 'assets/character/Character_SlashDownLeft.png', { frameWidth: frameWidth, frameHeight: frameHeight, margin: margin });
-        scene.load.spritesheet('slashdownright', 'assets/character/Character_SlashDownRight.png', { frameWidth: frameWidth, frameHeight: frameHeight, margin: margin });
-        scene.load.spritesheet('slashleft', 'assets/character/Character_SlashUpLeft.png', { frameWidth: frameWidth, frameHeight: frameHeight, margin: margin })
-        scene.load.spritesheet('slashright', 'assets/character/Character_SlashDownRight.png', { frameWidth: frameWidth, frameHeight: frameHeight, margin: margin });
+        scene.load.spritesheet('slashup', 'assets/character/Character_SlashUpRight.png', { frameWidth: slashFrameWidth, frameHeight: slashFrameHeight, margin: slashMargin })
+        scene.load.spritesheet('slashupleft', 'assets/character/Character_SlashUpLeft.png', { frameWidth: slashFrameWidth, frameHeight: slashFrameHeight, margin: slashMargin });
+        scene.load.spritesheet('slashupright', 'assets/character/Character_SlashUpRight.png', { frameWidth: slashFrameWidth, frameHeight: slashFrameHeight, margin: slashMargin });
+        scene.load.spritesheet('slashdown', 'assets/character/Character_SlashDownLeft.png', { frameWidth: slashFrameWidth, frameHeight: slashFrameHeight, margin: slashMargin })
+        scene.load.spritesheet('slashdownleft', 'assets/character/Character_SlashDownLeft.png', { frameWidth: slashFrameWidth, frameHeight: slashFrameHeight, margin: slashMargin });
+        scene.load.spritesheet('slashdownright', 'assets/character/Character_SlashDownRight.png', { frameWidth: slashFrameWidth, frameHeight: slashFrameHeight, margin: slashMargin });
+        scene.load.spritesheet('slashleft', 'assets/character/Character_SlashUpLeft.png', { frameWidth: slashFrameWidth, frameHeight: slashFrameHeight, margin: slashMargin })
+        scene.load.spritesheet('slashright', 'assets/character/Character_SlashDownRight.png', { frameWidth: slashFrameWidth, frameHeight: slashFrameHeight, margin: slashMargin });
     }
     private setupAnimations() {
         const frameRate = 10;
@@ -188,49 +210,49 @@ export default class Aplee {
         // slash animations
         this.scene.anims.create({
             key: 'slashup',
-            frames: this.scene.anims.generateFrameNumbers('slashup', { start: 0, end: 3 }),
+            frames: this.scene.anims.generateFrameNumbers('slashup', { start: 0, end: 4 }),
             frameRate: frameRate*2,
             repeat: -1
         });
         this.scene.anims.create({
             key: 'slashupleft',
-            frames: this.scene.anims.generateFrameNumbers('slashupleft', { start: 0, end: 3 }),
+            frames: this.scene.anims.generateFrameNumbers('slashupleft', { start: 0, end: 4 }),
             frameRate: frameRate*2,
             repeat: -1
         });
         this.scene.anims.create({
             key: 'slashupright',
-            frames: this.scene.anims.generateFrameNumbers('slashupright', { start: 0, end: 3 }),
+            frames: this.scene.anims.generateFrameNumbers('slashupright', { start: 0, end: 4 }),
             frameRate: frameRate*2,
             repeat: -1
         });
         this.scene.anims.create({
             key: 'slashdown',
-            frames: this.scene.anims.generateFrameNumbers('slashdown', { start: 0, end: 3 }),
+            frames: this.scene.anims.generateFrameNumbers('slashdown', { start: 0, end: 4 }),
             frameRate: frameRate*2,
             repeat: -1
         });
         this.scene.anims.create({
             key: 'slashdownleft',
-            frames: this.scene.anims.generateFrameNumbers('slashdownleft', { start: 0, end: 3 }),
+            frames: this.scene.anims.generateFrameNumbers('slashdownleft', { start: 0, end: 4 }),
             frameRate: frameRate*2,
             repeat: -1
         });
         this.scene.anims.create({
             key: 'slashdownright',
-            frames: this.scene.anims.generateFrameNumbers('slashdownright', { start: 0, end: 3 }),
+            frames: this.scene.anims.generateFrameNumbers('slashdownright', { start: 0, end: 4 }),
             frameRate: frameRate*2,
             repeat: -1
         });
         this.scene.anims.create({
             key: 'slashleft',
-            frames: this.scene.anims.generateFrameNumbers('slashleft', { start: 0, end: 3 }),
+            frames: this.scene.anims.generateFrameNumbers('slashleft', { start: 0, end: 4 }),
             frameRate: frameRate*2,
             repeat: -1
         });
         this.scene.anims.create({
             key: 'slashright',
-            frames: this.scene.anims.generateFrameNumbers('slashright', { start: 0, end: 3 }),
+            frames: this.scene.anims.generateFrameNumbers('slashright', { start: 0, end: 4 }),
             frameRate: frameRate*2,
             repeat: -1
         });

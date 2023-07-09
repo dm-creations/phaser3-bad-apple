@@ -1,8 +1,11 @@
 import * as Phaser from 'phaser';
+import BootScene from './scenes/BootScene';
+import YouWonScene from './scenes/YouWonScene';
 import Snake from './Snake';
 import Aplee from './Aplee';
 import Overlay from './overlay/Overlay'
 import { canvasContainer, gameWidth, gameHeight, pauseBtn, restartBtn, debugGrid, debugBtn, reverseBtn, gameContainer, overlay } from './config'
+// import MainMenuScene from './scenes/MainMenuScene';
 
 export default class Demo extends Phaser.Scene
 {
@@ -29,17 +32,26 @@ export default class Demo extends Phaser.Scene
         // create a function that preloads all the assets inside assets/character
         // this.load.setPath('assets/character');
         // this.load.image('down', 'assets/character/Character_Down.png');
-        Aplee.loadSpriteSheets(this)
+        // Aplee.loadSpriteSheets(this)
 
-        this.load.glsl('stars', 'assets/starfields.glsl.js');
+        // this.load.glsl('stars', 'assets/starfields.glsl.js');
 
-        this.load.spritesheet("snake-normal", "assets/snake-normal.png", {
-            frameWidth: 64
-        });
+        // this.load.spritesheet("snake-normal", "assets/snake-normal.png", {
+        //     frameWidth: 64
+        // });
+
+        this.load.spritesheet('boom', 'assets/explosion.png', { frameWidth: 64, frameHeight: 64, endFrame: 23 });
     }
 
     create ()
     {
+        this.anims.create({
+            key: 'explode',
+            frames: 'boom',
+            frameRate: 20,
+            showOnStart: true,
+            hideOnComplete: true
+        });
         this.overlay = new Overlay(this)
         // this.cameras.main.centerOn(0, 0);
         // this.add.shader('RGB Shift Field', -400, -300, 800, 600).setOrigin(0);
@@ -48,10 +60,12 @@ export default class Demo extends Phaser.Scene
         this.cursors = this.input.keyboard.createCursorKeys()
         this.addEventListeners()
 
-        this.snake = new Snake(this, -gameWidth, 300);
+        this.snake = new Snake(this, -gameWidth + 290, 300);
         this.aplee = new Aplee(this, 300, 0);
         // play the Aplee animation
         // this.aplee.anims.play('up');
+        // this.physics.add.collider(this.snake.bodyPartsSprites, this.aplee.apleeSprite);
+        this.physics.add.overlap(this.snake.bodyPartsSprites, this.aplee.apleeSprite, this.handleCollision, undefined, this);
         
     }
     update (time, delta)
@@ -66,9 +80,9 @@ export default class Demo extends Phaser.Scene
                 this.handleInput()
                 this.snake.move()
             } else {
+                if (this.snake.bodyPartsSprites.length === 0) {this.scene.start('YouWonScene') }
                 this.snake.autoMove();
             }
-    
             // this.checkCollision()
         }
         if (this.inControl === 'aplee') { // not affected by world iterations
@@ -83,6 +97,27 @@ export default class Demo extends Phaser.Scene
             // pause game
             this.scene.pause();
         }
+
+        if (this.aplee.isBoosting) {
+            // Enable collision between aplee and snake
+            this.physics.collide(this.aplee.apleeSprite, this.snake.bodyPartsSprites, this.breakSnake, undefined, this);
+        }
+
+        // console.log('check', this.snake.bodyPartsSprites[0], this.aplee)
+        
+    }
+    public breakSnake (aplee, snake) {
+        console.log('%cbreak', 'color: red')
+        snake.setTintFill()
+        // wait 1000ms and then run explosion animation in its place
+        this.time.delayedCall(500, () =>
+            {
+                snake.clearTint();
+                this.add.sprite(snake.x, snake.y, 'boom').play('explode');
+            });
+        
+        // subtract 3 from snake length
+        this.snake.shrinkSnake()
     }
     public handleInput (): void {
         const wantMoveDir = this.getDirByInput()
@@ -159,6 +194,15 @@ export default class Demo extends Phaser.Scene
         this.checkApplyBonus()
         this.checkTaran()
     }
+    public handleCollision (snake, aplee) {
+        // make snake flash for a second
+
+        aplee.setTintFill()
+        this.time.delayedCall(500, () =>
+            {
+                aplee.clearTint();
+            });
+    }
     private addEventListeners () {
         this.input.keyboard.on('keydown', ({ key }) => {
             this.snake.setDir(
@@ -192,21 +236,6 @@ export default class Demo extends Phaser.Scene
     }
 }
 
-const config = {
-    type: Phaser.AUTO,
-    backgroundColor: '#FFFFFF',
-    width: gameWidth,
-    height: gameHeight,
-    parent: canvasContainer || undefined,
-    physics: {
-        default: 'arcade',
-        arcade: { debug: true }
-    },
-    scene: Demo
-};
-
-const game = new Phaser.Game(config);
-
 if (pauseBtn) {
     pauseBtn.addEventListener('click', () => {
         const scene = game.scene.getScene('demo')
@@ -223,29 +252,44 @@ if (pauseBtn) {
     if (restartBtn) {
         restartBtn.addEventListener('click', () => {
         game.scene.start('demo')
-    })
-  }
-  if (debugBtn) {
+        })
+    }
+if (debugBtn) {
     debugBtn.addEventListener('click', () => {
-      if (debugGrid) {
+    if (debugGrid) {
         const isDebug = [undefined, '0'].includes(debugGrid.dataset.hide)
-  
+
         // '0' or '1'
         debugGrid.dataset.hide = (+isDebug).toString()
         debugGrid.classList.toggle('game__grid--hidden', !isDebug)
-  
+
         game.events.emit('app_toggle_debug', isDebug)
-      }
+    }
         if (debugBtn) {
             debugBtn.textContent = debugBtn.textContent === 'Debug' ? 'Debugging' : 'Debug'
         }
     })
   }
-  if (reverseBtn) {
-    reverseBtn.addEventListener('click', () => {
-        const scene = game.scene.getScene('demo')
-        const inControl = scene.inControl
-    
-        scene.inControl = inControl === 'snake' ? 'aplee' : 'snake'
-    })
-  }
+    if (reverseBtn) {
+        reverseBtn.addEventListener('click', () => {
+            const scene = game.scene.getScene('demo')
+            const inControl = scene.inControl
+        
+            scene.inControl = inControl === 'snake' ? 'aplee' : 'snake'
+        })
+    }
+
+const config = {
+    type: Phaser.AUTO,
+    backgroundColor: '#FFC107',
+    width: gameWidth,
+    height: gameHeight,
+    parent: canvasContainer || undefined,
+    physics: {
+        default: 'arcade',
+        arcade: { debug: true }
+    },
+    scene: [BootScene, Demo, YouWonScene ]
+};
+
+const game = new Phaser.Game(config);
