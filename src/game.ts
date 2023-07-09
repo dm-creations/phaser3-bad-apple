@@ -31,8 +31,6 @@ export default class Demo extends Phaser.Scene
         // this.load.image('down', 'assets/character/Character_Down.png');
         Aplee.loadSpriteSheets(this)
 
-        this.load.spritesheet('applee', 'assets/character/Character_Down.png', { frameWidth: 16, frameHeight: 19, margin: 8 });
-
         this.load.glsl('stars', 'assets/starfields.glsl.js');
 
         this.load.spritesheet("snake-normal", "assets/snake-normal.png", {
@@ -75,6 +73,7 @@ export default class Demo extends Phaser.Scene
         }
         if (this.inControl === 'aplee') { // not affected by world iterations
             this.aplee.handleInput(delta)
+            this.aplee.animateDirection()
         }
     
         // this.fpsText.setText(this.getFPS())
